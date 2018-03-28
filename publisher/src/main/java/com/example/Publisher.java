@@ -1,9 +1,7 @@
 package com.example;
 
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.util.ByteString;
 import akka.zeromq.*;
 import org.springframework.boot.CommandLineRunner;
