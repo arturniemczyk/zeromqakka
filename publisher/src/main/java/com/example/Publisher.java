@@ -1,10 +1,14 @@
 package com.example;
 
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.util.ByteString;
+import akka.zeromq.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.zeromq.ZMQ;
 
 import java.time.LocalDateTime;
 
@@ -20,23 +24,20 @@ public class Publisher implements CommandLineRunner {
     @Override
     public void run(String... strings) throws Exception {
 
-        ZMQ.Context context = ZMQ.context(1);
-        ZMQ.Socket publisher = context.socket(ZMQ.PUB);
+        ActorSystem system = ActorSystem.create();
 
-        publisher.bind("tcp://*:5555");
+        ActorRef pubSocket = ZeroMQExtension.get(system).newPubSocket(
+                new Bind("tcp://*:1233"));
+
 
         while (!Thread.currentThread ().isInterrupted ()) {
 
-            publisher.send (LocalDateTime.now().toString());
+            pubSocket.tell(ZMQMessage.withFrames(ByteString.fromString("----- Ping " + LocalDateTime.now())), ActorRef.noSender());
 
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.sleep(5000);
+
         }
-        publisher.close ();
-        context.term ();
+
 
     }
 }

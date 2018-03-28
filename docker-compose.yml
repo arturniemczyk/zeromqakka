@@ -12,7 +12,7 @@ services:
         volumes:
             - ./subscriber/target:/home/zmq
         command: ["java", "-jar", "/home/zmq/subscriber.jar"]
-        ports:
-          - 5555:5555
         links:
+          - publisher
+        depends_on:
           - publisher

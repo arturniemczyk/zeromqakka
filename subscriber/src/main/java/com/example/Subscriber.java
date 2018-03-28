@@ -1,10 +1,18 @@
 package com.example;
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.util.ByteString;
+import akka.zeromq.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.zeromq.ZMQ;
+
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @SpringBootApplication
 public class Subscriber implements CommandLineRunner
@@ -16,18 +24,14 @@ public class Subscriber implements CommandLineRunner
 
     @Override
     public void run(String... strings) throws Exception {
-        ZMQ.Context context = ZMQ.context(1);
-        ZMQ.Socket subscriber = context.socket(ZMQ.SUB);
 
-        subscriber.connect("tcp://publisher:5555");
-        subscriber.subscribe("".getBytes());
+        ActorSystem system = ActorSystem.create();
 
-        while (!Thread.currentThread ().isInterrupted ()) {
-            String res = subscriber.recvStr ();
-            System.out.println( "Sending at " + res + " received at " + LocalDateTime.now().toString());
-        }
+        ActorRef listener = system.actorOf(Props.create(Ping.class));
 
-        subscriber.close ();
-        context.term ();
+        ZeroMQExtension.get(system).newSubSocket(
+                new Connect("tcp://publisher:1233"),
+                new Listener(listener), Subscribe.all());
+
     }
 }
